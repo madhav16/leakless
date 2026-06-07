@@ -1,0 +1,83 @@
+/*
+ * LeakLess — Global Styles
+ * Tailwind CSS v4 — imported via @tailwindcss/vite plugin
+ * No tailwind.config.js required in v4.
+ */
+@import "tailwindcss";
+
+/* ── Design Tokens ─────────────────────────────────────── */
+@theme {
+  /* Brand palette */
+  --color-brand-50:   #f0f4ff;
+  --color-brand-100:  #e0e9ff;
+  --color-brand-200:  #c7d6ff;
+  --color-brand-300:  #a3b8ff;
+  --color-brand-400:  #7b94ff;
+  --color-brand-500:  #5b73f7;
+  --color-brand-600:  #4356e8;
+  --color-brand-700:  #3644cf;
+  --color-brand-800:  #2e39a8;
+  --color-brand-900:  #2a3384;
+
+  /* Surface — dark mode first */
+  --color-surface-50:  #0d0f1a;
+  --color-surface-100: #131624;
+  --color-surface-200: #1a1f35;
+  --color-surface-300: #222844;
+  --color-surface-400: #2c3354;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Border radius */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+}
+
+/* ── Base Reset ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-surface-50);
+  color: #e2e8f0;
+  margin: 0;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-400);
+  border-radius: 9999px;
+}
+
+/* ── Focus Ring ─────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
