@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/ui/card';
 import { formatCurrency } from '@/utils/format';
-import { Layers, Calendar, Sparkles, Activity, ArrowRight } from 'lucide-react';
+import { Layers, Calendar, CalendarRange, Sparkles, Activity, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 
@@ -10,17 +10,17 @@ export default function DashboardStats({ summary, health }) {
 
   const healthColor = !health
     ? 'text-slate-400 bg-slate-500/10 border-slate-500/20'
-    : health.score >= 80
+    : health.score >= 85
     ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-    : health.score >= 60
+    : health.score >= 70
     ? 'text-blue-400 bg-blue-500/10 border-blue-500/20'
-    : health.score >= 40
+    : health.score >= 50
     ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
     : 'text-red-400 bg-red-500/10 border-red-500/20';
 
   const stats = [
     {
-      title: 'Subscription Health',
+      title: 'Leak Score',
       value: health ? `${health.score}/100` : '—',
       description: health ? `${health.label} Status` : 'Calculating health...',
       icon: Activity,
@@ -35,11 +35,18 @@ export default function DashboardStats({ summary, health }) {
       color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     },
     {
-      title: 'Monthly recurring spend',
+      title: 'Monthly Spend',
       value: formatCurrency(summary.total_monthly_spend ?? 0),
       description: 'Normalized monthly recurring cost',
       icon: Calendar,
       color: 'text-brand-400 bg-brand-500/10 border-brand-500/20',
+    },
+    {
+      title: 'Annual Commitment',
+      value: formatCurrency(summary.total_annual_spend ?? 0),
+      description: 'Annualized cost across all billing cycles',
+      icon: CalendarRange,
+      color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
     },
     {
       title: 'Active Free Trials',
@@ -51,7 +58,7 @@ export default function DashboardStats({ summary, health }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
@@ -94,3 +101,4 @@ export default function DashboardStats({ summary, health }) {
     </div>
   );
 }
+

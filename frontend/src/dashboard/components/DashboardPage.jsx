@@ -5,8 +5,10 @@ import { useHealthScore } from '@/health-score/hooks/useHealthScore';
 import DashboardStats from './DashboardStats';
 import UpcomingRenewalsWidget from './UpcomingRenewalsWidget';
 import CategoryAnalyticsWidget from './CategoryAnalyticsWidget';
+import TopCostDriversWidget from './TopCostDriversWidget';
 import { AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '@/ui/button';
+import { formatCurrency } from '@/utils/format';
 
 export default function DashboardPage() {
   // Fetch stats & category breakdowns
@@ -54,9 +56,23 @@ export default function DashboardPage() {
           <span>Overview Dashboard</span>
           <Sparkles className="h-5 w-5 text-brand-400 animate-pulse hidden sm:inline" />
         </h1>
-        <p className="text-sm md:text-base text-slate-400">
-          Get a centralized analytical overview of your subscription leakage, trials, and billing schedules.
-        </p>
+        {!isLoading && !isError && statsData?.summary ? (
+          <p className="text-sm md:text-base text-slate-300">
+            You are spending{' '}
+            <span className="text-brand-400 font-bold">
+              {formatCurrency(statsData.summary.total_annual_spend ?? 0)}/year
+            </span>{' '}
+            across{' '}
+            <span className="text-brand-400 font-bold">
+              {statsData.summary.total_subscriptions ?? 0}
+            </span>{' '}
+            {(statsData.summary.total_subscriptions ?? 0) === 1 ? 'subscription' : 'subscriptions'}.
+          </p>
+        ) : (
+          <p className="text-sm md:text-base text-slate-400">
+            Get a centralized analytical overview of your subscription leakage, trials, and billing schedules.
+          </p>
+        )}
       </div>
 
       {/* Loading Skeleton */}
@@ -100,14 +116,20 @@ export default function DashboardPage() {
           {/* Summary Cards */}
           <DashboardStats summary={statsData?.summary} health={healthData} />
 
-          {/* Widgets Split Layout */}
+          {/* Main Content Grid: Upcoming Renewals + Top Cost Drivers */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
             {/* Upcoming Renewals Widget */}
             <UpcomingRenewalsWidget renewals={renewalsData} />
 
-            {/* Category Analytics Widget */}
-            <CategoryAnalyticsWidget categories={statsData?.spending_by_category} />
+            {/* Top Cost Drivers Widget */}
+            <TopCostDriversWidget
+              drivers={statsData?.top_cost_drivers ?? []}
+              totalAnnualSpend={statsData?.summary?.total_annual_spend ?? 0}
+            />
           </div>
+
+          {/* Below: Category Spend Analytics */}
+          <CategoryAnalyticsWidget categories={statsData?.spending_by_category} />
         </div>
       )}
     </div>

@@ -28,6 +28,55 @@ export async function getTotalMonthlySpend() {
 }
 
 /**
+ * Total annualized spend (accurate per billing cycle, excludes trials).
+ */
+export async function getTotalAnnualSpend() {
+  const [rows] = await pool.query(
+    `SELECT
+       SUM(
+         CASE billing_cycle
+           WHEN 'daily'     THEN cost * 365
+           WHEN 'weekly'    THEN cost * 52
+           WHEN 'monthly'   THEN cost * 12
+           WHEN 'quarterly' THEN cost * 4
+           WHEN 'yearly'    THEN cost
+           ELSE 0
+         END
+       ) AS total_annual
+     FROM subscriptions
+     WHERE is_trial = 0`,
+  );
+  return parseFloat(rows[0].total_annual ?? 0);
+}
+
+/**
+ * Top 5 highest-cost subscriptions by annualized spend (excludes trials).
+ */
+export async function getTopCostDrivers() {
+  const [rows] = await pool.query(
+    `SELECT
+       id,
+       name,
+       cost,
+       billing_cycle,
+       category,
+       CASE billing_cycle
+         WHEN 'daily'     THEN cost * 365
+         WHEN 'weekly'    THEN cost * 52
+         WHEN 'monthly'   THEN cost * 12
+         WHEN 'quarterly' THEN cost * 4
+         WHEN 'yearly'    THEN cost
+         ELSE 0
+       END AS annual_cost
+     FROM subscriptions
+     WHERE is_trial = 0
+     ORDER BY annual_cost DESC
+     LIMIT 5`,
+  );
+  return rows;
+}
+
+/**
  * Spending grouped by category.
  */
 export async function getSpendingByCategory() {
