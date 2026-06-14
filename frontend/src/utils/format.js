@@ -27,15 +27,25 @@ export function formatDate(date, options = { month: 'short', day: 'numeric', yea
 }
 
 /**
- * Get days until a future date (negative if past).
- * @param {string|Date} date
- * @returns {number}
+ * Returns whole-day difference between today and a target date.
+ * Uses date-only comparison to avoid timezone and time-of-day issues.
+ *
+ * Examples:
+ * Today      => 0
+ * Tomorrow   => 1
+ * Yesterday  => -1
  */
 export function getDaysUntil(date) {
   if (!date) return null;
-  const now = new Date();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const target = new Date(date);
-  const diffMs = target.getTime() - now.getTime();
+  target.setHours(0, 0, 0, 0);
+
+  const diffMs = target.getTime() - today.getTime();
+
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
@@ -46,9 +56,9 @@ export function getDaysUntil(date) {
 export function getRenewalLabel(renewalDate) {
   const days = getDaysUntil(renewalDate);
   if (days === null) return 'No renewal date';
-  if (days < 0)  return `Overdue by ${Math.abs(days)} days`;
+  if (days < 0) return `Overdue by ${Math.abs(days)} days`;
   if (days === 0) return 'Renews today';
   if (days === 1) return 'Renews tomorrow';
-  if (days <= 7)  return `Renews in ${days} days`;
+  if (days <= 7) return `Renews in ${days} days`;
   return `Renews ${formatDate(renewalDate)}`;
 }

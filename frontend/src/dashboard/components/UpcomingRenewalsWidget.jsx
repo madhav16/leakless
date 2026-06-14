@@ -73,7 +73,7 @@ export default function UpcomingRenewalsWidget({ renewals = [] }) {
   }, [renewals]);
 
   const sections = [];
-  
+
   if (grouped.overdue.length > 0) {
     sections.push({
       id: 'overdue',
