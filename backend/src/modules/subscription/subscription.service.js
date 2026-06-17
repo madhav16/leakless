@@ -39,3 +39,23 @@ export async function deleteSubscription(id) {
 export async function getUpcomingRenewals(days) {
   return subscriptionRepo.findUpcomingRenewals(days);
 }
+
+/**
+ * Fetch active trials ending within the next `days` days.
+ * Computes aggregate potential_annual_spend across all returned trials.
+ *
+ * @param {number} days
+ * @returns {Promise<{ trials: object[], total_trials: number, potential_annual_spend: number }>}
+ */
+export async function getTrialWatchlist(days = 30) {
+  const trials = await subscriptionRepo.findTrialWatchlist(days);
+  const potential_annual_spend = trials.reduce(
+    (sum, t) => sum + parseFloat(t.annual_impact ?? 0),
+    0,
+  );
+  return {
+    trials,
+    total_trials: trials.length,
+    potential_annual_spend: +(potential_annual_spend.toFixed(2)),
+  };
+}

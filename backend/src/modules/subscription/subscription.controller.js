@@ -46,3 +46,9 @@ export const getUpcomingRenewals = asyncHandler(async (req, res) => {
   const data = await subscriptionService.getUpcomingRenewals(days);
   sendSuccess(res, data, 'Upcoming renewals fetched');
 });
+
+export const getTrialWatchlist = asyncHandler(async (req, res) => {
+  const days = parseInt(req.query.days ?? '30', 10);
+  const data = await subscriptionService.getTrialWatchlist(days);
+  sendSuccess(res, data, 'Trial watchlist fetched');
+});

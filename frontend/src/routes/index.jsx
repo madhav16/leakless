@@ -5,11 +5,12 @@ import { ROUTES } from '@/constants/routes';
 // Feature pages (lazy-loaded for performance)
 import { lazy, Suspense } from 'react';
 
-const DashboardPage    = lazy(() => import('@/dashboard/components/DashboardPage'));
-const SubscriptionsPage = lazy(() => import('@/subscription/components/SubscriptionsPage'));
-const NotificationsPage = lazy(() => import('@/notification/components/NotificationsPage'));
-const HealthScorePage   = lazy(() => import('@/health-score/components/HealthScorePage'));
-const SettingsPage      = lazy(() => import('@/settings/components/SettingsPage'));
+const DashboardPage     = lazy(() => import('@/dashboard/components/DashboardPage'));
+const SubscriptionsPage  = lazy(() => import('@/subscription/components/SubscriptionsPage'));
+const NotificationsPage  = lazy(() => import('@/notification/components/NotificationsPage'));
+const HealthScorePage    = lazy(() => import('@/health-score/components/HealthScorePage'));
+const TrialWatchlistPage = lazy(() => import('@/trial-watchlist/components/TrialWatchlistPage'));
+const SettingsPage       = lazy(() => import('@/settings/components/SettingsPage'));
 
 function PageLoader() {
   return (
@@ -31,6 +32,7 @@ export default function AppRoutes() {
           <Route path={ROUTES.SUBSCRIPTIONS} element={<SubscriptionsPage />} />
           <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
           <Route path={ROUTES.HEALTH_SCORE} element={<HealthScorePage />} />
+          <Route path={ROUTES.TRIAL_WATCHLIST} element={<TrialWatchlistPage />} />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
 
           {/* Fallback */}

@@ -9,6 +9,7 @@ export const ROUTES = {
   SUBSCRIPTION_DETAIL: '/subscriptions/:id',
   NOTIFICATIONS: '/notifications',
   HEALTH_SCORE: '/health-score',
+  TRIAL_WATCHLIST: '/trial-watchlist',
   SETTINGS: '/settings',
 };
 

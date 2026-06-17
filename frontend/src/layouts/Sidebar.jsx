@@ -4,6 +4,7 @@ import {
   CreditCard,
   Bell,
   HeartPulse,
+  FlaskConical,
   Settings,
   Zap,
 } from 'lucide-react';
@@ -12,11 +13,12 @@ import { cn } from '@/utils/cn';
 import { useUnreadCount } from '@/notification/hooks/useNotifications';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',     icon: LayoutDashboard, to: ROUTES.DASHBOARD },
-  { label: 'Subscriptions', icon: CreditCard,       to: ROUTES.SUBSCRIPTIONS },
-  { label: 'Notifications', icon: Bell,             to: ROUTES.NOTIFICATIONS, badge: true },
-  { label: 'Health Score',  icon: HeartPulse,       to: ROUTES.HEALTH_SCORE },
-  { label: 'Settings',      icon: Settings,         to: ROUTES.SETTINGS },
+  { label: 'Dashboard',       icon: LayoutDashboard, to: ROUTES.DASHBOARD },
+  { label: 'Subscriptions',   icon: CreditCard,       to: ROUTES.SUBSCRIPTIONS },
+  { label: 'Notifications',   icon: Bell,             to: ROUTES.NOTIFICATIONS, badge: true },
+  { label: 'Health Score',    icon: HeartPulse,       to: ROUTES.HEALTH_SCORE },
+  { label: 'Trial Watchlist', icon: FlaskConical,     to: ROUTES.TRIAL_WATCHLIST },
+  { label: 'Settings',        icon: Settings,         to: ROUTES.SETTINGS },
 ];
 
 export default function Sidebar() {

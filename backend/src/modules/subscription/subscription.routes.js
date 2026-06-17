@@ -9,6 +9,9 @@ router.get('/', subscriptionController.getSubscriptions);
 // GET    /api/v1/subscriptions/renewals?days=7
 router.get('/renewals', subscriptionController.getUpcomingRenewals);
 
+// GET    /api/v1/subscriptions/trials?days=30
+router.get('/trials', subscriptionController.getTrialWatchlist);
+
 // GET    /api/v1/subscriptions/:id
 router.get('/:id', subscriptionController.getSubscriptionById);
 

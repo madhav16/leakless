@@ -31,4 +31,8 @@ export const QUERY_KEYS = {
     score: () => ['health-score'],
     breakdown: () => ['health-score', 'breakdown'],
   },
+
+  trialWatchlist: {
+    list: (days) => ['trial-watchlist', days],
+  },
 };

@@ -2,10 +2,12 @@ import React from 'react';
 import { useDashboardStats } from '../hooks/useDashboard';
 import { useUpcomingRenewals } from '@/subscription/hooks/useSubscriptions';
 import { useHealthScore } from '@/health-score/hooks/useHealthScore';
+import { useTrialWatchlist } from '@/trial-watchlist/hooks/useTrialWatchlist';
 import DashboardStats from './DashboardStats';
 import UpcomingRenewalsWidget from './UpcomingRenewalsWidget';
 import CategoryAnalyticsWidget from './CategoryAnalyticsWidget';
 import TopCostDriversWidget from './TopCostDriversWidget';
+import TrialWatchlistWidget from '@/trial-watchlist/components/TrialWatchlistWidget';
 import { AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { formatCurrency } from '@/utils/format';
@@ -38,15 +40,28 @@ export default function DashboardPage() {
     refetch: refetchHealth,
   } = useHealthScore();
 
-  const isLoading = isStatsLoading || isRenewalsLoading || isHealthLoading;
-  const isError = isStatsError || isRenewalsError || isHealthError;
-  const activeError = statsError || renewalsError || healthError;
+  // Fetch Trial Watchlist (30-day window)
+  const {
+    data: trialData,
+    isLoading: isTrialLoading,
+    isError: isTrialError,
+    error: trialError,
+    refetch: refetchTrials,
+  } = useTrialWatchlist(30);
+
+  const isLoading = isStatsLoading || isRenewalsLoading || isHealthLoading || isTrialLoading;
+  const isError = isStatsError || isRenewalsError || isHealthError || isTrialError;
+  const activeError = statsError || renewalsError || healthError || trialError;
 
   const handleRetry = () => {
     refetchStats();
     refetchRenewals();
     refetchHealth();
+    refetchTrials();
   };
+
+  // Whether any active trials exist — controls Trial Watchlist column visibility
+  const hasActiveTrials = (trialData?.total_trials ?? 0) > 0;
 
   return (
     <div className="p-6 md:p-8 space-y-6 md:space-y-8">
@@ -116,19 +131,25 @@ export default function DashboardPage() {
           {/* Summary Cards */}
           <DashboardStats summary={statsData?.summary} health={healthData} />
 
-          {/* Main Content Grid: Upcoming Renewals + Top Cost Drivers */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-            {/* Upcoming Renewals Widget */}
-            <UpcomingRenewalsWidget renewals={renewalsData} />
+          {/* Upcoming Financial Events:
+              Left  — Trial Watchlist (hidden when no active trials)
+              Right — Upcoming Renewals
+              When no trials exist the grid becomes single-column and Upcoming Renewals is full-width. */}
+          <div className={`grid grid-cols-1 gap-6 md:gap-8 ${hasActiveTrials ? 'lg:grid-cols-2' : ''}`}>
+            {/* Trial Watchlist — only renders when trials exist */}
+            <TrialWatchlistWidget trialData={trialData} />
 
-            {/* Top Cost Drivers Widget */}
-            <TopCostDriversWidget
-              drivers={statsData?.top_cost_drivers ?? []}
-              totalAnnualSpend={statsData?.summary?.total_annual_spend ?? 0}
-            />
+            {/* Upcoming Renewals */}
+            <UpcomingRenewalsWidget renewals={renewalsData} />
           </div>
 
-          {/* Below: Category Spend Analytics */}
+          {/* Top Cost Drivers (full width) */}
+          <TopCostDriversWidget
+            drivers={statsData?.top_cost_drivers ?? []}
+            totalAnnualSpend={statsData?.summary?.total_annual_spend ?? 0}
+          />
+
+          {/* Category Spend Analytics (full width) */}
           <CategoryAnalyticsWidget categories={statsData?.spending_by_category} />
         </div>
       )}

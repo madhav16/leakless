@@ -99,3 +99,41 @@ export async function findUpcomingRenewals(days = 7) {
   );
   return rows;
 }
+
+/**
+ * Fetch active trials ending within the next `days` days.
+ * Excludes expired trials (trial_end_date < CURDATE()).
+ * Includes trials ending today (DATEDIFF = 0).
+ * Computes days_until_expiry and annual_impact in SQL.
+ *
+ * @param {number} days  Window in days (default 30)
+ * @returns {Promise<object[]>}
+ */
+export async function findTrialWatchlist(days = 30) {
+  const [rows] = await pool.query(
+    `SELECT
+       id,
+       name,
+       cost,
+       billing_cycle,
+       category,
+       trial_end_date,
+       DATEDIFF(trial_end_date, CURDATE()) AS days_until_expiry,
+       CASE billing_cycle
+         WHEN 'daily'     THEN cost * 365
+         WHEN 'weekly'    THEN cost * 52
+         WHEN 'monthly'   THEN cost * 12
+         WHEN 'quarterly' THEN cost * 4
+         WHEN 'yearly'    THEN cost
+         ELSE 0
+       END AS annual_impact
+     FROM subscriptions
+     WHERE is_trial = 1
+       AND trial_end_date IS NOT NULL
+       AND trial_end_date >= CURDATE()
+       AND trial_end_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+     ORDER BY trial_end_date ASC`,
+    [days],
+  );
+  return rows;
+}
