@@ -3,7 +3,7 @@ import { useHealthBreakdown } from '../hooks/useHealthScore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/card';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
-import { formatCurrency } from '@/utils/format';
+
 import {
   Activity,
   AlertCircle,
@@ -193,12 +193,16 @@ export default function HealthScorePage() {
                   <span className="text-white font-bold">{health?.total_subscriptions ?? 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Total Monthly Expenditure</span>
-                  <span className="text-white font-bold">{formatCurrency(health?.total_monthly_spend ?? 0)}</span>
+                  <span>Identified Risks</span>
+                  <span className="text-white font-bold">{issues.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Total Identified Vulnerabilities</span>
-                  <span className="text-white font-bold">{issues.length}</span>
+                  <span>Total Deductions</span>
+                  <span className="font-bold text-red-400">
+                    {100 - (health?.score ?? 100) > 0
+                      ? `−${100 - (health?.score ?? 100)} pts`
+                      : '0 pts'}
+                  </span>
                 </div>
               </div>
             </CardContent>

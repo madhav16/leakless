@@ -17,10 +17,9 @@ export async function getHealthData() {
        billing_cycle,
        is_trial,
        trial_end_date,
-       last_used_date,
        renewal_date,
-       DATEDIFF(CURDATE(), last_used_date)  AS days_since_last_use,
-       DATEDIFF(renewal_date, CURDATE())    AS days_until_renewal
+       category,
+       DATEDIFF(renewal_date, CURDATE()) AS days_until_renewal
      FROM subscriptions`,
   );
   return rows;
