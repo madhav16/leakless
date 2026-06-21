@@ -43,14 +43,13 @@ export async function create(data) {
     renewal_date = null,
     is_trial = false,
     trial_end_date = null,
-    last_used_date = null,
   } = data;
 
   await pool.query(
     `INSERT INTO subscriptions
-       (id, name, cost, billing_cycle, category, renewal_date, is_trial, trial_end_date, last_used_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, name, cost, billing_cycle, category, renewal_date, is_trial ? 1 : 0, trial_end_date, last_used_date],
+       (id, name, cost, billing_cycle, category, renewal_date, is_trial, trial_end_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, name, cost, billing_cycle, category, renewal_date, is_trial ? 1 : 0, trial_end_date],
   );
 
   return id;

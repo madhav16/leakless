@@ -71,12 +71,6 @@ export const createSubscriptionSchema = z
       .refine((d) => !isNaN(Date.parse(d)), 'trial_end_date must be a valid date')
       .nullable()
       .optional(),
-
-    last_used_date: z
-      .string()
-      .refine((d) => !isNaN(Date.parse(d)), 'last_used_date must be a valid date')
-      .nullable()
-      .optional(),
   })
   .refine(
     (data) => {

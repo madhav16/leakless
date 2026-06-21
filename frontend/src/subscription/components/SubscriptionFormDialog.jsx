@@ -55,7 +55,6 @@ export default function SubscriptionFormDialog({
   const [renewalDate, setRenewalDate] = useState('');
   const [isTrial, setIsTrial] = useState(false);
   const [trialEndDate, setTrialEndDate] = useState('');
-  const [lastUsedDate, setLastUsedDate] = useState('');
 
   // Client Validation State
   const [errors, setErrors] = useState({});
@@ -71,7 +70,6 @@ export default function SubscriptionFormDialog({
         setRenewalDate(formatDateForInput(subscription.renewal_date));
         setIsTrial(!!subscription.is_trial);
         setTrialEndDate(formatDateForInput(subscription.trial_end_date));
-        setLastUsedDate(formatDateForInput(subscription.last_used_date));
       } else {
         setName('');
         setCost('');
@@ -80,7 +78,6 @@ export default function SubscriptionFormDialog({
         setRenewalDate('');
         setIsTrial(false);
         setTrialEndDate('');
-        setLastUsedDate('');
       }
       setErrors({});
     }
@@ -127,7 +124,6 @@ export default function SubscriptionFormDialog({
       renewal_date: formatDateForBackend(renewalDate),
       is_trial: isTrial,
       trial_end_date: isTrial ? formatDateForBackend(trialEndDate) : null,
-      last_used_date: formatDateForBackend(lastUsedDate),
     };
 
     onSubmit(payload);
@@ -266,40 +262,26 @@ export default function SubscriptionFormDialog({
             </div>
           </div>
 
-          {/* Conditionally rendered Trial End Date & Last Used Date */}
-          <div className="grid grid-cols-2 gap-4">
-            {isTrial && (
-              <div className="flex flex-col gap-1.5 col-span-2 sm:col-span-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Trial End Date <span className="text-brand-400">*</span>
-                </label>
-                <Input
-                  type="date"
-                  value={trialEndDate}
-                  onChange={(e) => setTrialEndDate(e.target.value)}
-                  className={
-                    errors.trialEndDate ? 'border-red-500/50 focus-visible:ring-red-500' : ''
-                  }
-                  disabled={isLoading}
-                />
-                {errors.trialEndDate && (
-                  <span className="text-xs text-red-400">{errors.trialEndDate}</span>
-                )}
-              </div>
-            )}
-
-            <div className={`flex flex-col gap-1.5 ${isTrial ? 'col-span-2 sm:col-span-1' : 'col-span-2'}`}>
+          {/* Trial End Date (shown when is_trial is checked) */}
+          {isTrial && (
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Last Used Date
+                Trial End Date <span className="text-brand-400">*</span>
               </label>
               <Input
                 type="date"
-                value={lastUsedDate}
-                onChange={(e) => setLastUsedDate(e.target.value)}
+                value={trialEndDate}
+                onChange={(e) => setTrialEndDate(e.target.value)}
+                className={
+                  errors.trialEndDate ? 'border-red-500/50 focus-visible:ring-red-500' : ''
+                }
                 disabled={isLoading}
               />
+              {errors.trialEndDate && (
+                <span className="text-xs text-red-400">{errors.trialEndDate}</span>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Footer Actions */}
           <DialogFooter className="pt-4 flex items-center justify-end gap-2 border-t border-white/5">

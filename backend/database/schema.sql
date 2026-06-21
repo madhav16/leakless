@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   renewal_date    DATE            NULL,
   is_trial        TINYINT(1)      NOT NULL DEFAULT 0,
   trial_end_date  DATE            NULL,
-  last_used_date  DATE            NULL,
   created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
                                   ON UPDATE CURRENT_TIMESTAMP,
