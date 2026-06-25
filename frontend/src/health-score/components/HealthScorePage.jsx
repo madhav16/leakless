@@ -63,6 +63,23 @@ export default function HealthScorePage() {
     };
   };
 
+  /**
+   * Map backend score label to a user-facing leakage risk level.
+   * Excellent → Low Leakage Risk
+   * Good      → Moderate Leakage Risk
+   * Fair      → High Leakage Risk
+   * Poor      → Critical Leakage Risk
+   */
+  const leakageRiskLabel = (label) => {
+    switch (label) {
+      case 'Excellent': return 'Low Leakage Risk';
+      case 'Good':      return 'Moderate Leakage Risk';
+      case 'Fair':      return 'High Leakage Risk';
+      case 'Poor':      return 'Critical Leakage Risk';
+      default:          return 'Low Leakage Risk';
+    }
+  };
+
   const getSeverityBadge = (severity) => {
     switch (severity) {
       case 'high':
@@ -92,9 +109,9 @@ export default function HealthScorePage() {
         <div className="p-4 bg-red-950/20 rounded-full border border-red-500/20 text-red-400 mb-4 animate-bounce">
           <AlertCircle className="h-10 w-10" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">Failed to load health metrics</h3>
+        <h3 className="text-xl font-bold text-white mb-2">Failed to load Leak Score</h3>
         <p className="text-sm text-slate-400 max-w-md mb-6">
-          {error?.message || 'We could not communicate with the health scoring API.'}
+          {error?.message || 'We could not communicate with the Leak Score API.'}
         </p>
         <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4" />
@@ -123,10 +140,10 @@ export default function HealthScorePage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
             <Activity className="h-6 w-6 text-brand-400" />
-            <span>Subscription Health Analysis</span>
+            <span>Leak Score</span>
           </h1>
           <p className="text-sm md:text-base text-slate-400">
-            A comprehensive, non-punitive audit based on active trials, upcoming renewals, category redundancies, and spending thresholds.
+            Your subscription leakage risk score, based on active free trial exposure, tool overlap within categories, and untracked trial billing dates.
           </p>
         </div>
       </div>
@@ -183,7 +200,7 @@ export default function HealthScorePage() {
 
               {/* Status Indicator Label */}
               <div className={`mt-6 px-4 py-1.5 rounded-full border text-sm font-bold tracking-wide shadow-lg ${theme.bg} ${theme.border} ${theme.text}`}>
-                {health?.label ?? 'Excellent'} Health Status
+                {leakageRiskLabel(health?.label ?? 'Excellent')}
               </div>
 
               {/* Sub metrics list */}
@@ -266,9 +283,9 @@ export default function HealthScorePage() {
               {issues.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
                   <CheckCircle className="h-10 w-10 text-emerald-400 mb-3" />
-                  <span className="text-base font-bold text-white mb-1">No issues identified!</span>
+                  <span className="text-base font-bold text-white mb-1">No leakage risks detected!</span>
                   <p className="text-xs text-slate-400 max-w-sm">
-                    Excellent! Your subscription dashboard is fully optimized with clean cycles and budget margins.
+                    Your active trials are tracked, no category overlap detected, and all trial billing dates are recorded.
                   </p>
                 </div>
               ) : (
@@ -311,9 +328,9 @@ export default function HealthScorePage() {
                 <Sparkles className="h-5 w-5 text-brand-400" />
                 <span>Actionable Recommendations</span>
               </CardTitle>
-              <CardDescription className="text-slate-400 text-xs md:text-sm">
-                Practical tips to prevent spending leakage, optimize tools, and improve your health score.
-              </CardDescription>
+                <CardDescription className="text-slate-400 text-xs md:text-sm">
+                  Specific steps to reduce trial leakage risk, consolidate overlapping tools, and improve your Leak Score.
+                </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               {recommendations.length === 0 ? (

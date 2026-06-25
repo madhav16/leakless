@@ -43,6 +43,36 @@ export function useUpcomingRenewals(days = 7) {
 }
 
 /**
+ * Invalidate every cache that depends on subscription data.
+ * Called after any create / update / delete mutation.
+ *
+ * @param {import('@tanstack/react-query').QueryClient} queryClient
+ * @param {string|null} [id] Supply the subscription id when invalidating a detail entry.
+ */
+function invalidateDependentCaches(queryClient, id = null) {
+  // Subscription list
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.all(), });
+
+  // Any upcoming renewals query (7, 30, etc.)
+  queryClient.invalidateQueries({ queryKey: ['subscriptions', 'renewals'], });
+
+  // Individual subscription
+  if (id) {
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.detail(id), });
+  }
+
+  // Dashboard
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dashboard.stats(), });
+
+  // Leak Score
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.healthScore.score(), });
+  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.healthScore.breakdown(), });
+
+  // Any Trial Watchlist query
+  queryClient.invalidateQueries({ queryKey: ['trial-watchlist'] });
+}
+
+/**
  * Create a new subscription.
  */
 export function useCreateSubscription() {
@@ -50,7 +80,7 @@ export function useCreateSubscription() {
   return useMutation({
     mutationFn: createSubscription,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.all() });
+      invalidateDependentCaches(queryClient);
     },
   });
 }
@@ -64,8 +94,7 @@ export function useUpdateSubscription(id) {
   return useMutation({
     mutationFn: (payload) => updateSubscription(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.all() });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.detail(id) });
+      invalidateDependentCaches(queryClient, id);
     },
   });
 }
@@ -77,8 +106,8 @@ export function useDeleteSubscription() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteSubscription,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptions.all() });
+    onSuccess: (_, deletedId) => {
+      invalidateDependentCaches(queryClient, deletedId);
     },
   });
 }

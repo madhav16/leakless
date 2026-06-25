@@ -8,6 +8,16 @@ import { ROUTES } from '@/constants/routes';
 export default function DashboardStats({ summary, health }) {
   if (!summary) return null;
 
+  const leakageRiskLabel = (label) => {
+    switch (label) {
+      case 'Excellent': return 'Low Leakage Risk';
+      case 'Good':      return 'Moderate Leakage Risk';
+      case 'Fair':      return 'High Leakage Risk';
+      case 'Poor':      return 'Critical Leakage Risk';
+      default:          return 'Low Leakage Risk';
+    }
+  };
+
   const healthColor = !health
     ? 'text-slate-400 bg-slate-500/10 border-slate-500/20'
     : health.score >= 85
@@ -22,7 +32,7 @@ export default function DashboardStats({ summary, health }) {
     {
       title: 'Leak Score',
       value: health ? `${health.score}/100` : '—',
-      description: health ? `${health.label} Status` : 'Calculating health...',
+      description: health ? leakageRiskLabel(health.label) : 'Calculating score...',
       icon: Activity,
       color: healthColor,
       isHealth: true,
