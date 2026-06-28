@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const {
     data: statsData,
     isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
     isError: isStatsError,
     error: statsError,
     refetch: refetchStats,
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const {
     data: renewalsData = [],
     isLoading: isRenewalsLoading,
+    isFetching: isRenewalsFetching,
     isError: isRenewalsError,
     error: renewalsError,
     refetch: refetchRenewals,
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   const {
     data: healthData,
     isLoading: isHealthLoading,
+    isFetching: isHealthFetching,
     isError: isHealthError,
     error: healthError,
     refetch: refetchHealth,
@@ -44,6 +47,7 @@ export default function DashboardPage() {
   const {
     data: trialData,
     isLoading: isTrialLoading,
+    isFetching: isTrialFetching,
     isError: isTrialError,
     error: trialError,
     refetch: refetchTrials,
@@ -52,6 +56,11 @@ export default function DashboardPage() {
   const isLoading = isStatsLoading || isRenewalsLoading || isHealthLoading || isTrialLoading;
   const isError = isStatsError || isRenewalsError || isHealthError || isTrialError;
   const activeError = statsError || renewalsError || healthError || trialError;
+
+  // True only after the first load completes and any query is silently re-fetching.
+  const isRefreshing =
+    !isLoading &&
+    (isStatsFetching || isRenewalsFetching || isHealthFetching || isTrialFetching);
 
   const handleRetry = () => {
     refetchStats();
@@ -67,10 +76,18 @@ export default function DashboardPage() {
     <div className="p-6 md:p-8 space-y-6 md:space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          <span>Overview Dashboard</span>
-          <Sparkles className="h-5 w-5 text-brand-400 animate-pulse hidden sm:inline" />
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <span>Overview Dashboard</span>
+            <Sparkles className="h-5 w-5 text-brand-400 animate-pulse hidden sm:inline" />
+          </h1>
+          {isRefreshing && (
+            <span className="flex items-center gap-1.5 text-xs text-slate-500 select-none">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              Updating dashboard…
+            </span>
+          )}
+        </div>
         {!isLoading && !isError && statsData?.summary ? (
           <p className="text-sm md:text-base text-slate-300">
             You are spending{' '}
