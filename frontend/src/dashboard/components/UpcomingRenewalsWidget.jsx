@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/
 import { Badge } from '@/ui/badge';
 import { getDaysUntil, formatDate, formatCurrency } from '@/utils/format';
 import { CalendarDays, CheckCircle } from 'lucide-react';
+import WidgetError from './WidgetError';
 
 /**
  * Returns a human-readable renewal status label.
@@ -39,7 +40,13 @@ function getDaysLabel(days) {
   );
 }
 
-export default function UpcomingRenewalsWidget({ renewals = [] }) {
+export default function UpcomingRenewalsWidget({
+  renewals = [],
+  isLoading = false,
+  isError = false,
+  error = null,
+  onRetry = null,
+}) {
   // Sort and group renewals
   const grouped = useMemo(() => {
     // Sort by nearest renewal date ascending (overdue first, then soonest)
@@ -113,7 +120,7 @@ export default function UpcomingRenewalsWidget({ renewals = [] }) {
   );
 
   return (
-    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden flex flex-col">
       <CardHeader className="border-b border-white/5 pb-4">
         <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-brand-400" />
@@ -125,7 +132,31 @@ export default function UpcomingRenewalsWidget({ renewals = [] }) {
       </CardHeader>
 
       <CardContent className="p-6 space-y-6 flex-1 overflow-y-auto">
-        {sections.map((section) => (
+        {isLoading && (
+          <div className="space-y-4">
+            {[...Array(4)].map((_, idx) => (
+              <div key={idx} className="space-y-2">
+                <div className="h-3 w-1/3 bg-slate-800/40 rounded animate-pulse" />
+                <div className="flex items-center justify-between p-3 bg-surface-300/40 border border-white/5 rounded-lg">
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-40 bg-slate-800/40 rounded animate-pulse" />
+                    <div className="h-2.5 w-28 bg-slate-800/40 rounded animate-pulse" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-16 bg-slate-800/40 rounded animate-pulse" />
+                    <div className="h-2.5 w-12 bg-slate-800/40 rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && isError && (
+          <WidgetError message={error?.message} onRetry={onRetry} />
+        )}
+
+        {!isLoading && !isError && sections.map((section) => (
           <div key={section.id} className="space-y-3">
             {/* Section Header */}
             <div className="flex items-center justify-between">

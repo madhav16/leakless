@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/
 import { Badge } from '@/ui/badge';
 import { formatCurrency } from '@/utils/format';
 import { TrendingUp } from 'lucide-react';
+import WidgetError from './WidgetError';
 
 /**
  * Human-readable billing cycle label.
@@ -27,7 +28,14 @@ const RANK_COLORS = [
   'bg-amber-700/20 text-amber-600 border-amber-700/30',  // 3rd
 ];
 
-export default function TopCostDriversWidget({ drivers = [], totalAnnualSpend = 0 }) {
+export default function TopCostDriversWidget({
+  drivers = [],
+  totalAnnualSpend = 0,
+  isLoading = false,
+  isError = false,
+  error = null,
+  onRetry = null,
+}) {
   // Sort by annual_cost descending, take top 5
   const sorted = useMemo(() => {
     return [...drivers]
@@ -36,7 +44,7 @@ export default function TopCostDriversWidget({ drivers = [], totalAnnualSpend = 
   }, [drivers]);
 
   return (
-    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden flex flex-col">
       <CardHeader className="border-b border-white/5 pb-4">
         <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-brand-400" />
@@ -48,7 +56,34 @@ export default function TopCostDriversWidget({ drivers = [], totalAnnualSpend = 
       </CardHeader>
 
       <CardContent className="p-6 flex-1 overflow-y-auto">
-        {sorted.length === 0 ? (
+        {isLoading && (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 bg-surface-300/40 border border-white/5 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-6 rounded-full bg-slate-800/40 animate-pulse" />
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-32 bg-slate-800/40 rounded animate-pulse" />
+                    <div className="h-2.5 w-20 bg-slate-800/40 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-right">
+                  <div className="h-3.5 w-16 bg-slate-800/40 rounded animate-pulse ml-auto" />
+                  <div className="h-2.5 w-10 bg-slate-800/40 rounded animate-pulse ml-auto" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && isError && (
+          <WidgetError message={error?.message} onRetry={onRetry} />
+        )}
+
+        {!isLoading && !isError && sorted.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
             <TrendingUp className="h-8 w-8 text-slate-600 mb-2" />
             <span className="text-sm font-semibold">No paid subscriptions found</span>
@@ -56,7 +91,9 @@ export default function TopCostDriversWidget({ drivers = [], totalAnnualSpend = 
               Add paid subscriptions to see your top annual cost drivers here.
             </p>
           </div>
-        ) : (
+        )}
+
+        {!isLoading && !isError && sorted.length > 0 && (
           <div className="space-y-3">
             {/* Table Header */}
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider pb-2 border-b border-white/5">

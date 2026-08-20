@@ -12,9 +12,39 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <style>
+      /* Instant dark shell before JS/CSS load — prevents white flash */
+      html, body { background-color: #0d0f1a; margin: 0; }
+      #root { min-height: 100dvh; }
+      .ll-boot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 100dvh;
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #64748b;
+        font-size: 14px;
+      }
+      .ll-boot-spinner {
+        width: 28px;
+        height: 28px;
+        border: 2px solid rgba(91, 115, 247, 0.25);
+        border-top-color: #5b73f7;
+        border-radius: 50%;
+        animation: ll-spin 0.7s linear infinite;
+      }
+      @keyframes ll-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="ll-boot" aria-live="polite" aria-busy="true">
+        <div class="ll-boot-spinner" aria-hidden="true"></div>
+        <span>Loading LeakLess…</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

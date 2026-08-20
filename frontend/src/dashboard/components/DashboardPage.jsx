@@ -8,15 +8,13 @@ import UpcomingRenewalsWidget from './UpcomingRenewalsWidget';
 import CategoryAnalyticsWidget from './CategoryAnalyticsWidget';
 import TopCostDriversWidget from './TopCostDriversWidget';
 import TrialWatchlistWidget from '@/trial-watchlist/components/TrialWatchlistWidget';
-import { AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
-import { Button } from '@/ui/button';
+import { RefreshCw, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 
 export default function DashboardPage() {
   // Fetch stats & category breakdowns
   const {
     data: statsData,
-    isLoading: isStatsLoading,
     isFetching: isStatsFetching,
     isError: isStatsError,
     error: statsError,
@@ -25,8 +23,7 @@ export default function DashboardPage() {
 
   // Fetch renewals for the next 30 days
   const {
-    data: renewalsData = [],
-    isLoading: isRenewalsLoading,
+    data: renewalsData,
     isFetching: isRenewalsFetching,
     isError: isRenewalsError,
     error: renewalsError,
@@ -36,41 +33,48 @@ export default function DashboardPage() {
   // Fetch Health Score
   const {
     data: healthData,
-    isLoading: isHealthLoading,
     isFetching: isHealthFetching,
     isError: isHealthError,
-    error: healthError,
     refetch: refetchHealth,
   } = useHealthScore();
 
   // Fetch Trial Watchlist (30-day window)
   const {
     data: trialData,
-    isLoading: isTrialLoading,
     isFetching: isTrialFetching,
     isError: isTrialError,
     error: trialError,
     refetch: refetchTrials,
   } = useTrialWatchlist(30);
 
-  const isLoading = isStatsLoading || isRenewalsLoading || isHealthLoading || isTrialLoading;
-  const isError = isStatsError || isRenewalsError || isHealthError || isTrialError;
-  const activeError = statsError || renewalsError || healthError || trialError;
+  // React Query v5: `isLoading` is only true for the initial pending fetch.
+  // After an error, Retry sets `isFetching` while `isError` stays true and
+  // `data` stays undefined — so skeletons must key off "fetching with no cache".
+  // Cached data (including an empty renewals list) must keep rendering on a
+  // failed background refetch instead of swapping back to the error UI.
+  const showStatsLoading = isStatsFetching && !statsData;
+  const showRenewalsLoading = isRenewalsFetching && !renewalsData;
+  const showHealthLoading = isHealthFetching && !healthData;
+  const showTrialLoading = isTrialFetching && !trialData;
 
-  // True only after the first load completes and any query is silently re-fetching.
+  const showStatsError = isStatsError && !statsData;
+  const showRenewalsError = isRenewalsError && !renewalsData;
+  const showTrialError = isTrialError && !trialData;
+
+  // Only a background re-fetch (already-cached data) counts as "Updating dashboard…".
+  // A slow first-load / retry widget renders its own skeleton instead of the spinner.
   const isRefreshing =
-    !isLoading &&
-    (isStatsFetching || isRenewalsFetching || isHealthFetching || isTrialFetching);
+    (isStatsFetching && !!statsData) ||
+    (isRenewalsFetching && renewalsData != null) ||
+    (isHealthFetching && !!healthData) ||
+    (isTrialFetching && !!trialData);
 
-  const handleRetry = () => {
-    refetchStats();
-    refetchRenewals();
-    refetchHealth();
-    refetchTrials();
-  };
-
-  // Whether any active trials exist — controls Trial Watchlist column visibility
+  // Whether any active trials exist — controls Trial Watchlist column visibility.
+  // Treat the trial column as occupied while loading or on first-load error so the
+  // renewals widget doesn't briefly collapse and then re-expand. A refetch error
+  // after a successful empty result must not re-open the column.
   const hasActiveTrials = (trialData?.total_trials ?? 0) > 0;
+  const showTrialColumn = showTrialLoading || showTrialError || hasActiveTrials;
 
   return (
     <div className="p-6 md:p-8 space-y-6 md:space-y-8">
@@ -88,7 +92,7 @@ export default function DashboardPage() {
             </span>
           )}
         </div>
-        {!isLoading && !isError && statsData?.summary ? (
+        {statsData?.summary ? (
           <p className="text-sm md:text-base text-slate-300">
             You are spending{' '}
             <span className="text-brand-400 font-bold">
@@ -107,69 +111,64 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="space-y-6 md:space-y-8">
-          {/* Stats Skeleton */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, idx) => (
-              <div key={idx} className="h-32 bg-slate-800/40 rounded-xl animate-pulse border border-white/5" />
-            ))}
-          </div>
+      <div className="space-y-6 md:space-y-8">
+        {/* Summary Cards — stats and health queries render independently */}
+        <DashboardStats
+          summary={statsData?.summary}
+          health={healthData}
+          isStatsLoading={showStatsLoading}
+          isHealthLoading={showHealthLoading}
+          isStatsError={showStatsError}
+          isHealthError={isHealthError}
+          statsError={statsError}
+          onRetryStats={refetchStats}
+          onRetryHealth={refetchHealth}
+        />
 
-          {/* Widgets Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-96 bg-slate-800/40 rounded-xl animate-pulse border border-white/5" />
-            <div className="h-96 bg-slate-800/40 rounded-xl animate-pulse border border-white/5" />
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {!isLoading && isError && (
-        <div className="flex flex-col items-center justify-center p-16 text-center bg-surface-200 border border-white/5 rounded-xl shadow-xl">
-          <div className="p-4 bg-red-950/20 rounded-full border border-red-500/20 text-red-400 mb-4 animate-bounce">
-            <AlertCircle className="h-10 w-10" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Failed to load analytics</h3>
-          <p className="text-sm text-slate-400 max-w-md mb-6">
-            {activeError?.message || 'We had trouble communicating with the API. Please ensure your backend server is online.'}
-          </p>
-          <Button onClick={handleRetry} variant="outline" className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            <span>Retry Loading</span>
-          </Button>
-        </div>
-      )}
-
-      {/* Loaded Dashboard Content */}
-      {!isLoading && !isError && (
-        <div className="space-y-6 md:space-y-8">
-          {/* Summary Cards */}
-          <DashboardStats summary={statsData?.summary} health={healthData} />
-
-          {/* Upcoming Financial Events:
-              Left  — Trial Watchlist (hidden when no active trials)
-              Right — Upcoming Renewals
-              When no trials exist the grid becomes single-column and Upcoming Renewals is full-width. */}
-          <div className={`grid grid-cols-1 gap-6 md:gap-8 ${hasActiveTrials ? 'lg:grid-cols-2' : ''}`}>
-            {/* Trial Watchlist — only renders when trials exist */}
-            <TrialWatchlistWidget trialData={trialData} />
-
-            {/* Upcoming Renewals */}
-            <UpcomingRenewalsWidget renewals={renewalsData} />
-          </div>
-
-          {/* Top Cost Drivers (full width) */}
-          <TopCostDriversWidget
-            drivers={statsData?.top_cost_drivers ?? []}
-            totalAnnualSpend={statsData?.summary?.total_annual_spend ?? 0}
+        {/* Upcoming Financial Events:
+            Left  — Trial Watchlist (hidden only after success with zero trials)
+            Right — Upcoming Renewals
+            While trials are loading or on first-load error the column is reserved,
+            so the renewals widget doesn't briefly collapse and then re-expand. */}
+        <div className={`grid grid-cols-1 gap-6 md:gap-8 items-start ${showTrialColumn ? 'lg:grid-cols-2' : ''}`}>
+          {/* Trial Watchlist — handles its own loading/error/empty states */}
+          <TrialWatchlistWidget
+            trialData={trialData}
+            isLoading={showTrialLoading}
+            isError={showTrialError}
+            error={trialError}
+            onRetry={refetchTrials}
           />
 
-          {/* Category Spend Analytics (full width) */}
-          <CategoryAnalyticsWidget categories={statsData?.spending_by_category} />
+          {/* Upcoming Renewals */}
+          <UpcomingRenewalsWidget
+            renewals={renewalsData ?? []}
+            isLoading={showRenewalsLoading}
+            isError={showRenewalsError}
+            error={renewalsError}
+            onRetry={refetchRenewals}
+          />
         </div>
-      )}
+
+        {/* Top Cost Drivers (full width) */}
+        <TopCostDriversWidget
+          drivers={statsData?.top_cost_drivers ?? []}
+          totalAnnualSpend={statsData?.summary?.total_annual_spend ?? 0}
+          isLoading={showStatsLoading}
+          isError={showStatsError}
+          error={statsError}
+          onRetry={refetchStats}
+        />
+
+        {/* Category Spend Analytics (full width) */}
+        <CategoryAnalyticsWidget
+          categories={statsData?.spending_by_category}
+          isLoading={showStatsLoading}
+          isError={showStatsError}
+          error={statsError}
+          onRetry={refetchStats}
+        />
+      </div>
     </div>
   );
 }

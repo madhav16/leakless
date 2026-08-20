@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/card';
 import { formatCurrency } from '@/utils/format';
 import { PieChart, Sparkles } from 'lucide-react';
+import WidgetError from './WidgetError';
 
 const BAR_COLORS = [
   'bg-brand-500',
@@ -16,7 +17,13 @@ const BAR_COLORS = [
   'bg-teal-500',
 ];
 
-export default function CategoryAnalyticsWidget({ categories = [] }) {
+export default function CategoryAnalyticsWidget({
+  categories = [],
+  isLoading = false,
+  isError = false,
+  error = null,
+  onRetry = null,
+}) {
   // Sort categories by highest spend descending
   const sortedCategories = useMemo(() => {
     return [...categories].sort((a, b) => parseFloat(b.total_cost ?? 0) - parseFloat(a.total_cost ?? 0));
@@ -28,7 +35,7 @@ export default function CategoryAnalyticsWidget({ categories = [] }) {
   }, [categories]);
 
   return (
-    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden flex flex-col">
       <CardHeader className="border-b border-white/5 pb-4">
         <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
           <PieChart className="h-5 w-5 text-brand-400" />
@@ -40,7 +47,28 @@ export default function CategoryAnalyticsWidget({ categories = [] }) {
       </CardHeader>
 
       <CardContent className="p-6 space-y-6 flex-1 overflow-y-auto">
-        {sortedCategories.length === 0 ? (
+        {isLoading && (
+          <div className="space-y-5">
+            {[...Array(5)].map((_, idx) => (
+              <div key={idx} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-800/40 animate-pulse" />
+                    <div className="h-3.5 w-32 bg-slate-800/40 rounded animate-pulse" />
+                  </div>
+                  <div className="h-3.5 w-16 bg-slate-800/40 rounded animate-pulse" />
+                </div>
+                <div className="w-full bg-slate-800/40 rounded-full h-2.5 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && isError && (
+          <WidgetError message={error?.message} onRetry={onRetry} />
+        )}
+
+        {!isLoading && !isError && sortedCategories.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500">
             <Sparkles className="h-8 w-8 text-slate-600 mb-2" />
             <span className="text-sm font-semibold">No category spending recorded</span>
@@ -48,7 +76,9 @@ export default function CategoryAnalyticsWidget({ categories = [] }) {
               Add subscriptions with valid categories to see detailed analytical breakdowns.
             </p>
           </div>
-        ) : (
+        )}
+
+        {!isLoading && !isError && sortedCategories.length > 0 && (
           <div className="space-y-5">
             {sortedCategories.map((item, index) => {
               const cost = parseFloat(item.total_cost ?? 0);

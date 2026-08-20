@@ -10,3 +10,5 @@ frontend/.env
 backend/node_modules
 frontend/node_modules
 
+# AI coding context — private, not for version control
+.ai/

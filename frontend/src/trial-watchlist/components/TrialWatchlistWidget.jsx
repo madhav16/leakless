@@ -2,9 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/ui/card';
 import { Badge } from '@/ui/badge';
-import { FlaskConical, ArrowRight, AlertTriangle } from 'lucide-react';
+import { FlaskConical, ArrowRight } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { ROUTES } from '@/constants/routes';
+import TrialWidgetError from './TrialWidgetError';
 
 const WIDGET_MAX_ROWS = 5;
 
@@ -57,19 +58,33 @@ function getUrgencyConfig(days) {
 /**
  * Compact Trial Watchlist dashboard widget.
  * Shows max WIDGET_MAX_ROWS most urgent trials.
- * Returns null when there are no active trials (widget is hidden).
+ * Returns null only when not loading, not in error, and there are no active
+ * trials — so a skeleton still occupies the column while the query is in
+ * flight and the user can retry on error without the renewals widget jumping.
  *
- * @param {{ trialData: { trials: object[], total_trials: number, potential_annual_spend: number } }} props
+ * @param {{
+ *   trialData?: { trials: object[], total_trials: number, potential_annual_spend: number },
+ *   isLoading?: boolean,
+ *   isError?: boolean,
+ *   error?: { message?: string } | null,
+ *   onRetry?: () => void,
+ * }} props
  */
-export default function TrialWatchlistWidget({ trialData }) {
-  if (!trialData || trialData.total_trials === 0) return null;
+export default function TrialWatchlistWidget({
+  trialData,
+  isLoading = false,
+  isError = false,
+  error = null,
+  onRetry = null,
+}) {
+  if (!isLoading && !isError && (!trialData || trialData.total_trials === 0)) return null;
 
-  const { trials, total_trials, potential_annual_spend } = trialData;
+  const { trials = [], total_trials = 0, potential_annual_spend = 0 } = trialData ?? {};
   const visibleTrials = trials.slice(0, WIDGET_MAX_ROWS);
   const hasMore = total_trials > WIDGET_MAX_ROWS;
 
   return (
-    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border border-white/5 bg-surface-200 shadow-xl rounded-xl overflow-hidden flex flex-col">
       <CardHeader className="border-b border-white/5 pb-4">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -78,7 +93,11 @@ export default function TrialWatchlistWidget({ trialData }) {
               <span>Trial Watchlist</span>
             </CardTitle>
             <CardDescription className="text-slate-400 text-xs md:text-sm mt-1">
-              {total_trials} active {total_trials === 1 ? 'trial' : 'trials'} ending within 30 days
+              {isLoading
+                ? 'Loading trial watchlist…'
+                : isError
+                ? "Couldn't load trials"
+                : `${total_trials} active ${total_trials === 1 ? 'trial' : 'trials'} ending within 30 days`}
             </CardDescription>
           </div>
 
@@ -87,16 +106,49 @@ export default function TrialWatchlistWidget({ trialData }) {
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
               If all convert
             </p>
-            <p className="text-lg font-extrabold text-amber-400 leading-tight">
-              {formatCurrency(potential_annual_spend)}
-            </p>
+            {isLoading || isError ? (
+              <div className="h-5 w-20 ml-auto bg-slate-800/40 rounded animate-pulse mt-1" />
+            ) : (
+              <p className="text-lg font-extrabold text-amber-400 leading-tight">
+                {formatCurrency(potential_annual_spend)}
+              </p>
+            )}
             <p className="text-[10px] text-slate-500">/year at risk</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-6 space-y-2 flex-1 overflow-y-auto">
-        {visibleTrials.map((trial) => {
+        {isLoading && (
+          <div className="space-y-2">
+            {[...Array(WIDGET_MAX_ROWS)].map((_, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 bg-surface-300/50 border border-white/5 rounded-lg"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-2 w-2 rounded-full bg-slate-800/40 animate-pulse" />
+                  <div className="space-y-1.5">
+                    <div className="h-3.5 w-40 bg-slate-800/40 rounded animate-pulse" />
+                    <div className="h-2.5 w-24 bg-slate-800/40 rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-1.5 flex flex-col items-end">
+                  <div className="h-3 w-20 bg-slate-800/40 rounded animate-pulse" />
+                  <div className="h-2.5 w-14 bg-slate-800/40 rounded animate-pulse" />
+                  <div className="h-2.5 w-16 bg-slate-800/40 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+            <div className="h-8 w-full bg-slate-800/40 rounded-lg animate-pulse mt-2" />
+          </div>
+        )}
+
+        {!isLoading && isError && (
+          <TrialWidgetError message={error?.message} onRetry={onRetry} />
+        )}
+
+        {!isLoading && !isError && visibleTrials.map((trial) => {
           const days = parseInt(trial.days_until_expiry ?? 0, 10);
           const urgency = getUrgencyConfig(days);
           const annualImpact = parseFloat(trial.annual_impact ?? 0);
@@ -144,19 +196,21 @@ export default function TrialWatchlistWidget({ trialData }) {
         })}
 
         {/* View all link */}
-        <div className="pt-2">
-          <Link
-            to={ROUTES.TRIAL_WATCHLIST}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-lg border border-white/5 hover:border-white/10 hover:bg-surface-300/40 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-all duration-200 group"
-          >
-            <span>
-              {hasMore
-                ? `View all ${total_trials} trials`
-                : 'View full watchlist'}
-            </span>
-            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+        {!isLoading && !isError && (
+          <div className="pt-2">
+            <Link
+              to={ROUTES.TRIAL_WATCHLIST}
+              className="flex items-center justify-between w-full px-3 py-2 rounded-lg border border-white/5 hover:border-white/10 hover:bg-surface-300/40 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-all duration-200 group"
+            >
+              <span>
+                {hasMore
+                  ? `View all ${total_trials} trials`
+                  : 'View full watchlist'}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
